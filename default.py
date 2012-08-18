@@ -74,9 +74,9 @@ try:
 except:
         pass
 
-print "Mode: "+str(mode)
-print "URL: "+str(url)
-print "Name: "+str(name)
+#print "Mode: "+str(mode)
+#print "URL: "+str(url)
+#print "Name: "+str(name)
 
 if mode==None or url==None or len(url)<1:
         print ""
