@@ -12,11 +12,6 @@ def showConcerts():
         link=response.read()
         response.close()
         match=re.compile('<li><a href="([^"]+)">(.*?)</a></li>').findall(link)
-
-	# sample to get localized string
-	#__settings__ = xbmcaddon.Addon(id='plugin.video.wdrrockpalast')
-	#__language__ = __settings__.getLocalizedString
-	#addDir(__language__( 30000 ), '',0,'')
 	
         for url,name in match:
                 addDir( HTMLParser().unescape(name), 'HTTP://www.wdr.de'+url,1,'HTTP://www.wdr.de/tv/rockpalast/codebase/img/audioplayerbild_512x288.jpg')
@@ -33,7 +28,6 @@ def playVideo(url):
         video_url=re.compile('dslSrc=([^&]+?)&amp;').findall(link)
         title_url=re.compile('<title>([^-]+?)- Rockpalast').findall(link)
         xbmc.Player().play(video_url[0])
-        #xbmcplugin.endOfDirectory(int(sys.argv[1]), False)
 
 def getParams():
         param=[]

@@ -1,3 +1,6 @@
+[B]v1.0.6 (18.08.2012)[/B]
+- Change: Description amended.
+
 [B]v1.0.5 (03.08.2012)[/B]
 - Change: Now additionally an audio add-on.
 
