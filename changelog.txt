@@ -1,3 +1,6 @@
+[B]v1.0.8 (19.12.2012)[/B]
+- Change: Video now played via playlist
+
 [B]v1.0.7 (29.08.2012)[/B]
 - Change: Language tag added to addon.xml.
 - Change: Icon resized to 256x256 pixels.

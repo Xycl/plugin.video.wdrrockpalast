@@ -27,7 +27,15 @@ def playVideo(url):
         response.close()
         video_url=re.compile('dslSrc=([^&]+?)&amp;').findall(link)
         title_url=re.compile('<title>([^-]+?)- Rockpalast').findall(link)
-        xbmc.Player().play(video_url[0])
+        
+        playlist = xbmc.PlayList( xbmc.PLAYLIST_VIDEO )
+        playlist.clear()
+        playlist.add(video_url[0])
+        xbmc.Player().play( playlist)        
+        
+        #listitem = xbmcgui.ListItem(title_url[0])
+        #listitem.setInfo('video', {'Title': title_url[0]})
+        #xbmc.Player( xbmc.PLAYER_CORE_DVDPLAYER ).play(video_url[0], listitem)        
 
 def getParams():
         param=[]
