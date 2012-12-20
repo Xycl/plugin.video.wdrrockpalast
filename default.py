@@ -27,15 +27,13 @@ def playVideo(url):
         response.close()
         video_url=re.compile('dslSrc=([^&]+?)&amp;').findall(link)
         title_url=re.compile('<title>([^-]+?)- Rockpalast').findall(link)
+
+        url = urllib.unquote_plus(video_url[0])
+        title = title_url[0]
         
-        playlist = xbmc.PlayList( xbmc.PLAYLIST_VIDEO )
-        playlist.clear()
-        playlist.add(video_url[0])
-        xbmc.Player().play( playlist)        
-        
-        #listitem = xbmcgui.ListItem(title_url[0])
-        #listitem.setInfo('video', {'Title': title_url[0]})
-        #xbmc.Player( xbmc.PLAYER_CORE_DVDPLAYER ).play(video_url[0], listitem)        
+        listitem = xbmcgui.ListItem(title)
+        listitem.setInfo('video', {'Title': title})
+        xbmc.Player(xbmc.PLAYER_CORE_AUTO).play( url, listitem)       
 
 def getParams():
         param=[]
