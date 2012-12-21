@@ -1,8 +1,6 @@
-[B]v1.0.9 (20.12.2012)[/B]
-- Change: Video now played via url and listitem entry
-
-[B]v1.0.8 (19.12.2012)[/B]
-- Change: Video now played via playlist
+[B]v1.1.0 (21.12.2012)[/B]
+- Change: xbmc.Player.play(url) to xbmc.Player.play(url, listitem) due to several guys complaining about none working videos.
+- Update: Due to the set title in above listitem, in play mode the plugin now shows the artist name instead of the video filename.
 
 [B]v1.0.7 (29.08.2012)[/B]
 - Change: Language tag added to addon.xml.
