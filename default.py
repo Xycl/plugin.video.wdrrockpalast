@@ -31,7 +31,7 @@ def playVideo(url):
         url = urllib.unquote_plus(video_url[0])
         title = title_url[0]
         
-        listitem = xbmcgui.ListItem(title)
+        listitem = xbmcgui.ListItem(title, iconImage="DefaultFolder.png", thumbnailImage='HTTP://www.wdr.de/tv/rockpalast/codebase/img/audioplayerbild_512x288.jpg')
         listitem.setInfo('video', {'Title': title})
         xbmc.Player(xbmc.PLAYER_CORE_AUTO).play( url, listitem)       
 
