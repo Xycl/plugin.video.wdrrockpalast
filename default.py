@@ -39,11 +39,11 @@ def showConcerts():
 	
         for url,name in match:
                 name = name.decode('ISO-8859-1').encode('utf-8')
-                addDir(urllib.unquote_plus(name), 'HTTP://www.wdr.de'+url,1,'HTTP://www.wdr.de/tv/rockpalast/codebase/img/audioplayerbild_512x288.jpg')
+                addDir(urllib.unquote_plus(name), 'HTTP://www.wdr.de'+url, 1, 'HTTP://www.wdr.de/tv/rockpalast/codebase/img/audioplayerbild_512x288.jpg')
         xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_VIDEO_TITLE)
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
         
-def playVideo(url):
+def playVideo(url, name):
         req = urllib2.Request(url)
         req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
         response = urllib2.urlopen(req)
@@ -84,7 +84,7 @@ def getParams():
                                 
         return param
 
-def addDir(name,url,mode,iconimage):
+def addDir(name, url, mode, iconimage):
         u=sys.argv[0]+"?url="+urllib.quote_plus(url)+"&mode="+str(mode)+"&name="+urllib.quote_plus(name)
         ok=True
         liz=xbmcgui.ListItem(name, iconImage="DefaultFolder.png", thumbnailImage=iconimage)
@@ -116,6 +116,6 @@ if mode==None or url==None or len(url)<1:
         showConcerts()
        
 elif mode==1:
-        playVideo(url)
+        playVideo(url, name)
 
 
