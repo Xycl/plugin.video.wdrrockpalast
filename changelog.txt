@@ -1,3 +1,6 @@
+[B]v2.1.2 (03.01.2013)[/B]
+- Fix:    Frodo version numbers for add-on and xbmc.python
+
 [B]v1.1.2 (01.01.2013)[/B]
 - Update: Compatibility fix for Eden and Frodo.
 
