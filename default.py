@@ -26,7 +26,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 import urllib, urllib2, re
 # xbmc imports
 import xbmcplugin, xbmcgui, xbmc
-
+from HTMLParser import HTMLParser
 
 
 def showConcerts():
@@ -39,7 +39,7 @@ def showConcerts():
 	
         for url,name in match:
                 name = name.decode('ISO-8859-1').encode('utf-8')
-                addDir(urllib.unquote_plus(name), 'HTTP://www.wdr.de'+url, 1, 'HTTP://www.wdr.de/tv/rockpalast/codebase/img/audioplayerbild_512x288.jpg')
+                addDir(HTMLParser().unescape(name), 'HTTP://www.wdr.de'+url, 1, 'HTTP://www.wdr.de/tv/rockpalast/codebase/img/audioplayerbild_512x288.jpg')
         xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_VIDEO_TITLE)
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
         
