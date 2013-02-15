@@ -1,3 +1,6 @@
+[B]v2.3.0 (15.02.2013)[/B]
+- Update: Parameter handling changed.
+
 [B]v2.2.0 (17.01.2013)[/B]
 - Fix:    urlib.unquote_plus() changed to HTMLParser().unescape()
 
