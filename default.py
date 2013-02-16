@@ -26,10 +26,10 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 import urllib, urllib2, re
 # xbmc imports
 import xbmcplugin, xbmcgui, xbmc
+from HTMLParser import HTMLParser
 
 
-
-def showConcerts():
+def show_concerts():
         req = urllib2.Request('http://www.wdr.de/tv/rockpalast/videos/uebersicht.jsp')
         req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
         response = urllib2.urlopen(req)
@@ -39,11 +39,12 @@ def showConcerts():
 	
         for url,name in match:
                 name = name.decode('ISO-8859-1').encode('utf-8')
-                addDir(urllib.unquote_plus(name), 'HTTP://www.wdr.de'+url, 1, 'HTTP://www.wdr.de/tv/rockpalast/codebase/img/audioplayerbild_512x288.jpg')
+                add_dir(HTMLParser().unescape(name), 'HTTP://www.wdr.de'+url, 1, 'HTTP://www.wdr.de/tv/rockpalast/codebase/img/audioplayerbild_512x288.jpg')
+                
         xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_VIDEO_TITLE)
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
         
-def playVideo(url, name):
+def play_video(url, name):
         req = urllib2.Request(url)
         req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
         response = urllib2.urlopen(req)
@@ -65,26 +66,24 @@ def playVideo(url, name):
         listitem = xbmcgui.ListItem(title, iconImage="DefaultFolder.png", thumbnailImage='HTTP://www.wdr.de/tv/rockpalast/codebase/img/audioplayerbild_512x288.jpg')
         listitem.setInfo('video', {'Title': title})
         xbmc.Player(xbmc.PLAYER_CORE_AUTO).play( url, listitem)       
+        
+def get_params():
+    """ extract params from argv[2] to make a dict (key=value) """
+    param_dict = {}
+    try:
+        if sys.argv[2]:
+            param_pairs=sys.argv[2][1:].split( "&" )
+            for params_pair in param_pairs:
+                param_splits = params_pair.split('=')
+                if (len(param_splits))==2:
+                    param_dict[urllib.unquote_plus(param_splits[0])] = urllib.unquote_plus(param_splits[1])
+    except:
+        pass
+    return param_dict
+    
 
-def getParams():
-        param=[]
-        paramstring=sys.argv[2]
-        if len(paramstring)>=2:
-                params=sys.argv[2]
-                cleanedparams=params.replace('?','')
-                if (params[len(params)-1]=='/'):
-                        params=params[0:len(params)-2]
-                pairsofparams=cleanedparams.split('&')
-                param={}
-                for i in range(len(pairsofparams)):
-                        splitparams={}
-                        splitparams=pairsofparams[i].split('=')
-                        if (len(splitparams))==2:
-                                param[splitparams[0]]=splitparams[1]
-                                
-        return param
 
-def addDir(name, url, mode, iconimage):
+def add_dir(name, url, mode, iconimage):
         u=sys.argv[0]+"?url="+urllib.quote_plus(url)+"&mode="+str(mode)+"&name="+urllib.quote_plus(name)
         ok=True
         liz=xbmcgui.ListItem(name, iconImage="DefaultFolder.png", thumbnailImage=iconimage)
@@ -93,7 +92,10 @@ def addDir(name, url, mode, iconimage):
         return ok
         
               
-params=getParams()
+params=get_params()
+print sys.argv[2]
+print params
+
 url=None
 name=None
 mode=None
@@ -113,9 +115,9 @@ except:
 
 
 if mode==None or url==None or len(url)<1:
-        showConcerts()
+        show_concerts()
        
 elif mode==1:
-        playVideo(url, name)
+        play_video(url, name)
 
 
