@@ -1,3 +1,6 @@
+[B]v12.0.1 (18.06.2013)[/B]
+- Change: RegEx changed
+
 [B]v12.0.0 (13.06.2013)[/B]
 - Fix:    RTMP url and parameters of concerts changed
 - Change: Version changed to 12 for Frodo and 11 for Eden
