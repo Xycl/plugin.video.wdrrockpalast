@@ -113,7 +113,7 @@ def play_video(from_url, name):
     org_video_url = urllib.unquote_plus(video_url[0])
 
     # find the rtmp parameters
-    match=re.compile('([\w+]*?://[a-zA-Z0-9\.]*?)/([a-zA-Z0-9\.]*?)/(.*)').findall(org_video_url)
+    match=re.compile('([\w+]*?://[^/]*?)/([^/]*?)/(.*)').findall(org_video_url)
     host, path, playpath_from_url = match[0]
     playpath, extension = os.path.splitext(playpath_from_url)
 
