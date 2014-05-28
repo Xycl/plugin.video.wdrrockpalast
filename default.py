@@ -2,8 +2,8 @@
 # -*- coding: utf8 -*-
 
 """ 
-WDR Rockpalast
-Copyright (C) 2012 Xycl
+Amazon Instant Prime
+Copyright (C) 2014 Xycl
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,29 +17,17 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-
-
-
-Paths used by WDR Rockpalast
-
-New:
-rtmp://gffstream.fcod.llnwd.net:443/a792
-<playpath>mp4:e2/tv/rockpalast/live/2010/airbourne 
-<swfUrl>http://www.wdr.de/themen/global/flashplayer/wsPlayer.swf 
-<pageUrl>http://www.wdr.de/tv/rockpalast/extra/videos/2010/0322/airbourne.jsp
-
-Old:
-rtmp://gffstream.fcod.llnwd.net/a792/e2/tv/rockpalast/live/2010/airbourne.mp4
 """
 
 
-# os imports
+# python imports
 import urllib, urllib2, re, os
-# xbmc imports
-import xbmcplugin, xbmcgui, xbmc
 from HTMLParser import HTMLParser
 
-        
+# xbmc imports
+import xbmcplugin, xbmcgui, xbmc
+
+
 def smart_unicode(s):
     """credit : sfaxman"""
     if not s:
@@ -67,6 +55,7 @@ def smart_utf8(s):
     return smart_unicode(s).encode('utf-8')
 
     
+# not used    
 def log(msg, level=xbmc.LOGDEBUG):
 
     if type(msg).__name__=='unicode':
@@ -82,60 +71,60 @@ def log(msg, level=xbmc.LOGDEBUG):
 
     xbmc.log(str("[%s] line %5d in %s %s >> %s"%("plugin.video.wdrrockpalast", int(lineno), filename, module, msg.__str__())), level)   
     
+
+def add_dir(name, url, mode, iconimage):
+    try:
+        display_name = HTMLParser().unescape(smart_unicode(name))
+    except:
+        display_name = name
+        pass
+
+    ok=True
+    liz=xbmcgui.ListItem(display_name, iconImage="DefaultFolder.png", thumbnailImage=iconimage)
+    liz.setInfo( type="Video", infoLabels={ "Title": display_name } )
+    if mode == 1:
+        u=sys.argv[0]+"?url="+urllib.quote_plus(url)+"&mode="+str(mode)+"&name="+urllib.quote_plus(name)
+        ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=u, listitem=liz, isFolder=True)
+    else:
+        u = "plugin://plugin.program.chrome.launcher/?kiosk=yes&mode=showSite&stopPlayback=yes&url=%s"%urllib.quote_plus(url) 
+        ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=u, listitem=liz, isFolder=False)
+    return ok
+            
     
-def show_concerts():
-    req = urllib2.Request('http://www.wdr.de/tv/rockpalast/videos/uebersicht.jsp')
+def show_movies(page):
+ 
+    # start page
+    if page == '':
+        req = urllib2.Request('http://www.amazon.de/s/ref=sr_nr_n_0?rh=n%3A3279204031%2Cn%3A!3010076031%2Cn%3A3356018031&bbn=3279204031&sort=popularity-rank&ie=UTF8&qid=1401261746&rnid=3279204031')
+    # subsequent pages
+    else:
+        req = urllib2.Request(page)
+        
     req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
     response = urllib2.urlopen(req)
     link=response.read()
     response.close()
-    match=re.compile('<li><a href="([^"]+)">(.*?)</a></li>').findall(link)
+    
+    # find movies
+    match=re.compile('<img onload=.*?src="(.*?)" class="productImage ilc2" />.*?</div></a><h3 class="newaps">.*?<a href="(.*?)"><span class="lrg bold">(.*?)</span></a>', re.DOTALL).findall(link)
 
-    for url,name in match:
-        name = name.decode('ISO-8859-1').encode('utf-8')
-        log("Found concert %s"%name)
-        add_dir(HTMLParser().unescape(name), 'HTTP://www.wdr.de'+url, 1, 'HTTP://www.wdr.de/tv/rockpalast/codebase/img/audioplayerbild_512x288.jpg')
+    # add movies to list
+    for img,url,name in match:
+        add_dir(name, url, 2, img)
             
-    xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_VIDEO_TITLE)
+    # find link to next page
+    match=re.compile('<a title="Nächste Seite".*?id="pagnNextLink".*?class="pagnNext".*?href="(.*?)">', re.DOTALL).findall(link)
+    for url in match:
+        try:
+            url = HTMLParser().unescape(smart_unicode(url))
+        except:
+            pass
+        add_dir('>> Nächste Seite', 'http://www.amazon.de' + url , 1, '')
+        break
+    
+    #xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_VIDEO_TITLE)
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
-
-def play_video(from_url, name):
-    # load page containing the video
-    req = urllib2.Request(from_url)
-    req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
-    response = urllib2.urlopen(req)
-    video_page=response.read()
-    response.close()
-
-    # find video url
-    video_url=re.compile('dslSrc=([^&]+?)&amp;').findall(video_page)
-    org_video_url = urllib.unquote_plus(video_url[0])
-
-    # find the rtmp parameters
-    match=re.compile('([\w+]*?://[^/]*?)/([^/]*?)/(.*)').findall(org_video_url)
-    host, path, playpath_from_url = match[0]
-    playpath, extension = os.path.splitext(playpath_from_url)
-
-    # build complete path
-    rtmp_path = host + ":443/" + path +" playpath="+ extension[1:] + ":" + playpath + " swfUrl=http://www.wdr.de/themen/global/flashplayer/wsPlayer.swf pageUrl=" + from_url
-
-    if len(name)>2:
-        title = name
-    else:
-        title_url=re.compile('<title>(.+?)- Rockpalast').findall(video_page)
-        
-        try:
-            title = urllib.unquote_plus(title_url[0])
-        except:
-            title = 'unnamed'
-
-    log("Playing %s"%title)
-    log("URL = %s"%rtmp_path)
-    listitem = xbmcgui.ListItem(title, iconImage="DefaultFolder.png", thumbnailImage='HTTP://www.wdr.de/tv/rockpalast/codebase/img/audioplayerbild_512x288.jpg')
-    listitem.setInfo('video', {'Title': title})
-    xbmc.Player(xbmc.PLAYER_CORE_AUTO).play( rtmp_path, listitem)       
-        
 
 def get_params():
     """ extract params from argv[2] to make a dict (key=value) """
@@ -152,14 +141,6 @@ def get_params():
     return param_dict
 
 
-def add_dir(name, url, mode, iconimage):
-    u=sys.argv[0]+"?url="+urllib.quote_plus(url)+"&mode="+str(mode)+"&name="+urllib.quote_plus(name)
-    ok=True
-    liz=xbmcgui.ListItem(name, iconImage="DefaultFolder.png", thumbnailImage=iconimage)
-    liz.setInfo( type="Video", infoLabels={ "Title": name } )
-    ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=u, listitem=liz, isFolder=False)
-    return ok
-        
               
 params=get_params()
 
@@ -182,9 +163,10 @@ except:
 
 
 if mode==None or url==None or len(url)<1:
-    show_concerts()
-       
-elif mode==1:
+    show_movies('')
+if mode == 1:
+    show_movies(url)   
+elif mode==2:
     play_video(url, name)
 
 
