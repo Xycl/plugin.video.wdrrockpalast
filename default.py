@@ -83,59 +83,84 @@ def log(msg, level=xbmc.LOGDEBUG):
     xbmc.log(str("[%s] line %5d in %s %s >> %s"%("plugin.video.wdrrockpalast", int(lineno), filename, module, msg.__str__())), level)   
     
     
-def show_concerts():
-    req = urllib2.Request('http://www.wdr.de/tv/rockpalast/videos/uebersicht.jsp')
+def show_main_entry():
+    url = 'http://www1.wdr.de/fernsehen/kultur/rockpalast/videos/rockpalastvideos_konzerte100.html'
+    req = urllib2.Request(url)
     req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
     response = urllib2.urlopen(req)
     link=response.read()
     response.close()
-    match=re.compile('<li><a href="([^"]+)">(.*?)</a></li>').findall(link)
-
-    for url,name in match:
-        name = name.decode('ISO-8859-1').encode('utf-8')
+    match=re.compile('<li class="teaserCont.*?<img src="(.*?)".*?/>.*?<a href="(.*?)".*?>(.*?)</a>',re.DOTALL).findall(link)
+    for img,url,name in match:
+        #name = name.decode('ISO-8859-1').encode('utf-8')
         log("Found concert %s"%name)
-        add_dir(HTMLParser().unescape(name), 'HTTP://www.wdr.de'+url, 1, 'HTTP://www.wdr.de/tv/rockpalast/codebase/img/audioplayerbild_512x288.jpg')
+        add_dir(HTMLParser().unescape(name), 'HTTP://www1.wdr.de'+url, 1, 'HTTP://www1.wdr.de'+img) #'HTTP://www.wdr.de/tv/rockpalast/codebase/img/audioplayerbild_512x288.jpg')
             
     xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_VIDEO_TITLE)
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
+def show_concerts(url):
 
+    #print "----------------------"
+    #print url
+    req = urllib2.Request(url)
+    req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
+    response = urllib2.urlopen(req)
+    video_page=response.read()
+    response.close()
+    
+    channels=re.compile('channels : \[.*?{.*?bezeichnung : "(Liveauftritte|Konzerte)",(.*?)\].*?},', re.DOTALL).findall(video_page)
+    
+    """
+    for channel, content in channels:
+        #print channel
+    
+        video_urls=re.compile('thumbnail: "(.*?)",.*?headline: "(.*?)",.*?link: "(.*?)"',re.DOTALL).findall(content)
+        try:
+            for img, title, url in video_urls:
+                #print url
+                add_dir(HTMLParser().unescape(title), 'HTTP://www1.wdr.de'+url, 2, 'HTTP://www1.wdr.de'+img)
+        except:
+            pass
+    """
+    video_urls=re.compile('thumbnail: "(.*?)",.*?headline: "(.*?)",.*?link: "(.*?)"',re.DOTALL).findall(video_page)
+    try:
+        for img, title, url in video_urls:
+            #print url
+            add_dir(HTMLParser().unescape(title), 'HTTP://www1.wdr.de'+url, 2, 'HTTP://www1.wdr.de'+img)
+    except:
+        pass    
+    xbmcplugin.endOfDirectory(int(sys.argv[1]))
+        
 def play_video(from_url, name):
-    # load page containing the video
+
+    #print "play_video"
+    #print from_url
+    
     req = urllib2.Request(from_url)
     req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
     response = urllib2.urlopen(req)
     video_page=response.read()
     response.close()
+    #print "-------------------"
+    #print video_page
+    #print "-------------------"
 
-    # find video url
-    video_url=re.compile('dslSrc=([^&]+?)&amp;').findall(video_page)
-    org_video_url = urllib.unquote_plus(video_url[0])
-
-    # find the rtmp parameters
-    match=re.compile('([\w+]*?://[^/]*?)/([^/]*?)/(.*)').findall(org_video_url)
-    host, path, playpath_from_url = match[0]
-    playpath, extension = os.path.splitext(playpath_from_url)
-
-    # build complete path
-    rtmp_path = host + ":443/" + path +" playpath="+ extension[1:] + ":" + playpath + " swfUrl=http://www.wdr.de/themen/global/flashplayer/wsPlayer.swf pageUrl=" + from_url
-
-    if len(name)>2:
-        title = name
-    else:
-        title_url=re.compile('<title>(.+?)- Rockpalast').findall(video_page)
+                                           
+    video_urls=re.compile('<a rel="adaptiv" type="application/vnd.apple.mpegURL" href="(.*?)">',re.DOTALL).findall(video_page)
+    #print video_urls
+    #return
+    try:
+        for video_url in video_urls:
         
-        try:
-            title = urllib.unquote_plus(title_url[0])
-        except:
-            title = 'unnamed'
-
-    log("Playing %s"%title)
-    log("URL = %s"%rtmp_path)
-    listitem = xbmcgui.ListItem(title, iconImage="DefaultFolder.png", thumbnailImage='HTTP://www.wdr.de/tv/rockpalast/codebase/img/audioplayerbild_512x288.jpg')
-    listitem.setInfo('video', {'Title': title})
-    xbmc.Player(xbmc.PLAYER_CORE_AUTO).play( rtmp_path, listitem)       
-        
+            # load page containing the video
+            listitem = xbmcgui.ListItem(name, iconImage="DefaultFolder.png", thumbnailImage='HTTP://www.wdr.de/tv/rockpalast/codebase/img/audioplayerbild_512x288.jpg')
+            listitem.setInfo('video', {'Title': name})
+            #xbmc.Player(xbmc.PLAYER_CORE_AUTO).play( 'http://adaptiv.wdr.de/i/medstdp/ww/fsk0/59/594170/,594170_6290932,594170_6290931,594170_6290930,594170_6290934,.mp4.csmil/master.m3u8', listitem) 
+            xbmc.Player(xbmc.PLAYER_CORE_AUTO).play( video_url, listitem) 
+            return
+    except:
+        pass
 
 def get_params():
     """ extract params from argv[2] to make a dict (key=value) """
@@ -157,7 +182,7 @@ def add_dir(name, url, mode, iconimage):
     ok=True
     liz=xbmcgui.ListItem(name, iconImage="DefaultFolder.png", thumbnailImage=iconimage)
     liz.setInfo( type="Video", infoLabels={ "Title": name } )
-    ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=u, listitem=liz, isFolder=False)
+    ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=u, listitem=liz, isFolder=True)
     return ok
         
               
@@ -182,9 +207,10 @@ except:
 
 
 if mode==None or url==None or len(url)<1:
-    show_concerts()
+    show_main_entry()
        
 elif mode==1:
+    show_concerts(url)
+elif mode==2:
     play_video(url, name)
-
 
