@@ -18,26 +18,16 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-
-
-Paths used by WDR Rockpalast
-
-New:
-rtmp://gffstream.fcod.llnwd.net:443/a792
-<playpath>mp4:e2/tv/rockpalast/live/2010/airbourne 
-<swfUrl>http://www.wdr.de/themen/global/flashplayer/wsPlayer.swf 
-<pageUrl>http://www.wdr.de/tv/rockpalast/extra/videos/2010/0322/airbourne.jsp
-
-Old:
-rtmp://gffstream.fcod.llnwd.net/a792/e2/tv/rockpalast/live/2010/airbourne.mp4
 """
 
 
 # os imports
-import urllib, urllib2, re, os
+import urllib, urllib2, re, os, sys
+from HTMLParser import HTMLParser
+
 # xbmc imports
 import xbmcplugin, xbmcgui, xbmc
-from HTMLParser import HTMLParser
+
 
         
 def smart_unicode(s):
@@ -84,18 +74,45 @@ def log(msg, level=xbmc.LOGDEBUG):
     
     
 def show_main_entry():
+    
     url = 'http://www1.wdr.de/fernsehen/kultur/rockpalast/videos/rockpalastvideos_konzerte100.html'
     req = urllib2.Request(url)
     req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
     response = urllib2.urlopen(req)
     link=response.read()
     response.close()
-    match=re.compile('<li class="teaserCont.*?<img src="(.*?)".*?/>.*?<a href="(.*?)".*?>(.*?)</a>',re.DOTALL).findall(link)
-    for img,url,name in match:
-        #name = name.decode('ISO-8859-1').encode('utf-8')
-        log("Found concert %s"%name)
-        add_dir(HTMLParser().unescape(name), 'HTTP://www1.wdr.de'+url, 1, 'HTTP://www1.wdr.de'+img) #'HTTP://www.wdr.de/tv/rockpalast/codebase/img/audioplayerbild_512x288.jpg')
+    match_years=re.compile('<h2 .*?class="colored">(\d+)</a></h2>(.*?)<h2 ',re.DOTALL).findall(link)
+    for year, block in match_years:    
+        match=re.compile('<li class="teaserCont.*?<img src="(.*?)".*?/>.*?<a href="(.*?)".*?>(.*?)</a>',re.DOTALL).findall(block)
+        for img,url,name in match:
+            name = name.strip(' \t\n\r')
+            #name = name.decode('ISO-8859-1').encode('utf-8')
+            log("Found concert name: %s"%name)
+            log("Found concert url:  %s"%url)
+            add_dir(HTMLParser().unescape(name + " ("+str(year) +")"), 'HTTP://www1.wdr.de'+url, 1, 'HTTP://www1.wdr.de'+img) #'HTTP://www.wdr.de/tv/rockpalast/codebase/img/audioplayerbild_512x288.jpg')
+    
+    
+    url = 'http://www1.wdr.de/fernsehen/kultur/rockpalast/videos/rockpalastvideos_festivals100.html'
+    req = urllib2.Request(url)
+    req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
+    response = urllib2.urlopen(req)
+    link=response.read()
+    response.close()
+    match_years=re.compile('<h2 .*?class="colored">(\d+)</a></h2>(.*?)<h2 ',re.DOTALL).findall(link)
+    for year, block in match_years:
+        match=re.compile('<li class="teaserCont.*?<img src="(.*?)".*?/>.*?<a href="(.*?)".*?>(.*?)</a>',re.DOTALL).findall(block)
+    
+        for img,url,name in match:
+            name = name.strip(' \t\n\r')
+            #year = year.strip(' \t\n\r')
+            #name = name.decode('ISO-8859-1').encode('utf-8')
+            #log("Found concert year: %s"%year)
+            log("Found concert name: %s"%name)
+            log("Found concert url:  %s"%url)
+            add_dir(HTMLParser().unescape(name + " ("+str(year) +")"), 'HTTP://www1.wdr.de'+url, 1, 'HTTP://www1.wdr.de'+img) #'HTTP://www.wdr.de/tv/rockpalast/codebase/img/audioplayerbild_512x288.jpg')
+            #add_dir(HTMLParser().unescape(name), 'HTTP://www1.wdr.de'+url, 1, 'HTTP://www1.wdr.de'+img) #'HTTP://www.wdr.de/tv/rockpalast/codebase/img/audioplayerbild_512x288.jpg')
             
+                
     xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_VIDEO_TITLE)
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
@@ -109,7 +126,7 @@ def show_concerts(url):
     video_page=response.read()
     response.close()
     
-    channels=re.compile('channels : \[.*?{.*?bezeichnung : "(Liveauftritte|Konzerte)",(.*?)\].*?},', re.DOTALL).findall(video_page)
+    #channels=re.compile('channels : \[.*?{.*?bezeichnung : "(Liveauftritte|Konzerte)",(.*?)\].*?},', re.DOTALL).findall(video_page)
     
     """
     for channel, content in channels:
@@ -179,7 +196,7 @@ def get_params():
 
 def add_dir(name, url, mode, iconimage):
     u=sys.argv[0]+"?url="+urllib.quote_plus(url)+"&mode="+str(mode)+"&name="+urllib.quote_plus(name)
-    ok=True
+
     liz=xbmcgui.ListItem(name, iconImage="DefaultFolder.png", thumbnailImage=iconimage)
     liz.setInfo( type="Video", infoLabels={ "Title": name } )
     ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=u, listitem=liz, isFolder=True)
@@ -211,6 +228,7 @@ if mode==None or url==None or len(url)<1:
        
 elif mode==1:
     show_concerts(url)
+    
 elif mode==2:
     play_video(url, name)
 
