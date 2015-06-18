@@ -1,5 +1,8 @@
+[B]v14.1.0 (18.016.2015)[/B]
+- Fix:   Regular expression corrected.
+
 [B]v14.0.1 (09.01.2015)[/B]
-- Update: Music festivals added
+- Update: Music festivals added.
 
 [B]v14.0.0 (30.12.2014)[/B]
 - Fix:    WDR changed the entire Rockpalast pages.

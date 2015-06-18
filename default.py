@@ -98,10 +98,18 @@ def show_main_entry():
     response = urllib2.urlopen(req)
     link=response.read()
     response.close()
+    first_year=0
+    last_year =0
     match_years=re.compile('<h2 .*?class="colored">(\d+)</a></h2>(.*?)<h2 ',re.DOTALL).findall(link)
     for year, block in match_years:
+        log(year)
         match=re.compile('<li class="teaserCont.*?<img src="(.*?)".*?/>.*?<a href="(.*?)".*?>(.*?)</a>',re.DOTALL).findall(block)
-    
+        
+        if first_year == 0:
+            first_year = year
+        
+        last_year = year
+        
         for img,url,name in match:
             name = name.strip(' \t\n\r')
             #year = year.strip(' \t\n\r')
@@ -111,8 +119,33 @@ def show_main_entry():
             log("Found concert url:  %s"%url)
             add_dir(HTMLParser().unescape(name + " ("+str(year) +")"), 'HTTP://www1.wdr.de'+url, 1, 'HTTP://www1.wdr.de'+img) #'HTTP://www.wdr.de/tv/rockpalast/codebase/img/audioplayerbild_512x288.jpg')
             #add_dir(HTMLParser().unescape(name), 'HTTP://www1.wdr.de'+url, 1, 'HTTP://www1.wdr.de'+img) #'HTTP://www.wdr.de/tv/rockpalast/codebase/img/audioplayerbild_512x288.jpg')
+
+    if first_year != 0:
+        first_year = int(first_year) -1
+        
+        while(first_year > int(last_year)-1):
+            match_firstyearsblock=re.compile('<h2 .*?class="colored">'+str(first_year)+'</a></h2>(.*?)<h2 ',re.DOTALL).findall(link)
             
-                
+            
+            
+            for firstblock in match_firstyearsblock:
+
+                for year, block in match_years:
+                    log(year)
+                    match=re.compile('<li class="teaserCont.*?<img src="(.*?)".*?/>.*?<a href="(.*?)".*?>(.*?)</a>',re.DOTALL).findall(firstblock)
+            
+                for img,url,name in match:
+                    name = name.strip(' \t\n\r')
+                    #year = year.strip(' \t\n\r')
+                    #name = name.decode('ISO-8859-1').encode('utf-8')
+                    #log("Found concert year: %s"%year)
+                    log("Found concert name: %s"%name)
+                    log("Found concert url:  %s"%url)
+                    add_dir(HTMLParser().unescape(name + " ("+str(first_year) +")"), 'HTTP://www1.wdr.de'+url, 1, 'HTTP://www1.wdr.de'+img) #'HTTP://www.wdr.de/tv/rockpalast/codebase/img/audioplayerbild_512x288.jpg')
+                    #add_dir(HTMLParser().unescape(name), 'HTTP://www1.wdr.de'+url, 1, 'HTTP://www1.wdr.de'+img) #'HTTP://www.wdr.de/tv/rockpalast/codebase/img/audioplayerbild_512x288.jpg')
+            
+            first_year = int(first_year) -2       
+            
     xbmcplugin.addSortMethod(int(sys.argv[1]), xbmcplugin.SORT_METHOD_VIDEO_TITLE)
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
